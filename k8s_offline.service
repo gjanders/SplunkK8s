@@ -1,0 +1,16 @@
+[Unit]
+Description=Attempt to gracefully shutdown K8s pods prior to shutdown of the OS
+After=network.target
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+ExecStop=/root/scripts/k8s_node_offline.sh
+ExecStart=/root/scripts/k8s_node_online.sh
+RemainAfterExit=yes
+# allow 10 minutes/pod by 4 in the worst case for stopping Splunk
+TimeoutStopSec=2400
+
+[Install]
+WantedBy=multi-user.target
+
