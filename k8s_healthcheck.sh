@@ -34,11 +34,22 @@ while IFS= read -r line; do
             echo "$date node=$node has CM pvc $pvc" >> ${log}
             for a_pvc in $pvc; do
                 echo "$date kubectl delete -n $namespace $a_pvc" >> ${log}
-                kubectl delete -n $namespace $a_pvc
+                kubectl delete -n $namespace $a_pvc 2>&1 >> ${log} &
+                sleep 10
+                echo "$date kubectl get -n $namespace $a_pvc" >> ${log}
+                res=`kubectl get -n $namespace $a_pvc`
+                echo "$date $res" >> ${log}
+                if [ "x$res" != "x" ]; then
+                    echo "$date kubectl patch -n $namespace $a_pvc -p '{\"metadata\":{\"finalizers\":null}}'" >> ${log}
+                    kubectl patch -n $namespace $a_pvc -p '{"metadata":{"finalizers":null}}' 2>&1 >> ${log}
+                    sleep 3
+                fi
             done
+            the_pod=`echo $pods | awk '{ print $2 }'`
+            echo "$date kubectl delete pod -n $namespace ${the_pod}" >> ${log}
+            kubectl delete pod -n $namespace ${the_pod} --grace-period 0 --force 2>&1 >> ${log}
         else
             echo "$date No cluster managers found on $node" >> ${log}
         fi
     fi
 done < /tmp/combined.txt
-
