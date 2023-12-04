@@ -24,12 +24,12 @@ if [ $type == "indexer" ]; then
     fi
   done < ${tmpfile}
   rm ${tmpfile}
-  echo "$date kubectl exec -n $namespace $pod -t -i -- /opt/splunk/bin/splunk offline -auth admin:" | tee -a ${log}
-  kubectl exec -n $namespace $pod -t -i -- /opt/splunk/bin/splunk offline -auth admin:$secret 2>&1 | tee -a ${log}
+  echo "$date kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:" | tee -a ${log}
+  kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:$secret 2>&1 | tee -a ${log}
 else
   echo "$date pod=$pod namespace=$namespace, non-indexers will be stopped without an offline" | tee -a ${log}
 fi
-echo "$date kubectl exec -n $namespace $pod -t -i -- /opt/splunk/bin/splunk stop" | tee -a ${log}
-kubectl exec -n $namespace $pod -t -i -- /opt/splunk/bin/splunk stop 2>&1 | tee -a ${log}
+echo "$date kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop" | tee -a ${log}
+kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop 2>&1 | tee -a ${log}
 echo "$date kubectl delete pod -n $namespace $pod"
 kubectl delete pod -n $namespace $pod 2>&1 | tee -a ${log}
