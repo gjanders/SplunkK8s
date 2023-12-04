@@ -26,8 +26,8 @@ while IFS= read -r line; do
     seconds_difference=$((current_time - target_time))
     #echo "$node seconds difference is $seconds_difference"
     echo "$date node=$node found seconds_difference=$seconds_difference" >> ${log}
-    if [ $seconds_difference -gt 800 ]; then
-        echo "$date $node down for more than 12 minutes, something is broken here seconds_difference=$seconds_difference > threshold" >> ${log}
+    if [ $seconds_difference -gt 1500 ]; then
+        echo "$date $node down for more than 25 minutes, something is broken here seconds_difference=$seconds_difference > threshold" >> ${log}
         pods=`kubectl get pods -A --field-selector spec.nodeName=$node --selector app.kubernetes.io/name=cluster-manager | grep -v "NAMESPACE"`
         if [ "x$pods" != "x" ]; then
             echo "$date node=$node has pods $pods including a CM" >> ${log}
