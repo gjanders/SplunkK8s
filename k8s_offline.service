@@ -1,7 +1,7 @@
 [Unit]
 Description=Attempt to gracefully shutdown K8s pods prior to shutdown of the OS
-After=network.target
-Before=shutdown.target reboot.target halt.target
+After=kubelet.service network.target
+#Before=shutdown.target reboot.target halt.target
 
 [Service]
 Type=oneshot
