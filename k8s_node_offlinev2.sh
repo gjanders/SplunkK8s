@@ -32,7 +32,7 @@ for pid in "${pids[@]}"; do
 done
 
 for i in "${!status[@]}"; do
-    echo "$date job $i exited with ${status[$i]}"
+    echo "$date job $i exited with ${status[$i]}" | tee -a ${log}
 done
 
 echo "$date kubectl drain `hostname` --ignore-daemonsets" | tee -a ${log}
