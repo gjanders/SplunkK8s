@@ -13,7 +13,10 @@ while IFS= read -r line; do
     fi
 done < /tmp/pod_names.txt
 
-cluster_managers=`kubectl get virtualservice -n istio-system | grep "\-cm.network" | awk '{ print $3 }' | cut -d '"' -f2`
+cluster_managers=`kubectl get virtualservice -n istio-system | grep -E "(\-cm.network|\-cm-web)" | awk '{ print $3 }' | cut -d '"' -f2 | sort | uniq`
+echo "`date` Working on $cluster_managers"
+# This part of the script could be re-written to use kubectl exec on the manager pod with
+# splunk _internal call '/services/...' or similar but using the REST API is easier for now
 for cluster_manager in `echo $cluster_managers`; do
     /root/scripts/roll_and_resync_buckets_v2.sh $cluster_manager
     sleep 30
