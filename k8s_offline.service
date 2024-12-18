@@ -8,9 +8,8 @@ Type=oneshot
 ExecStop=/root/scripts/k8s_node_offline.sh
 ExecStart=/root/scripts/k8s_node_online.sh
 RemainAfterExit=yes
-# allow 10 minutes/pod by 4 in the worst case for stopping Splunk
-TimeoutStopSec=2400
+# allow 10 minutes for stopping Splunk and a 4 minute grace period
+TimeoutStopSec=840
 
 [Install]
 WantedBy=multi-user.target
-
