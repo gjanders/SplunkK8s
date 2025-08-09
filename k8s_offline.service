@@ -5,7 +5,7 @@ After=kubelet.service network.target
 
 [Service]
 Type=oneshot
-ExecStop=/root/scripts/k8s_node_offline.sh
+ExecStop=/root/scripts/k8s_node_offlinev2.sh
 ExecStart=/root/scripts/k8s_node_online.sh
 RemainAfterExit=yes
 # allow 10 minutes for stopping Splunk and a 4 minute grace period
