@@ -4,12 +4,25 @@ export KUBECONFIG=/etc/kubernetes/admin.conf
 # This script is designed to offline or stop a splunk instance gracefully
 # for indexer within the cluster that involves an offline
 
-date=`/bin/date +"%Y-%m-%d %H:%M:%S.%3N %z"`
-log=/opt/splunkforwarder/var/log/splunk/k8s_node_offline.sh
+LOG_FILE=/opt/splunkforwarder/var/log/splunk/k8s_node_offline.log
+
+# Logging function
+log() {
+    local message="$1"
+    if [ -f "$LOG_FILE" ]; then
+        local log_size
+        log_size=$(stat -c%s "$LOG_FILE")
+        if [ "$log_size" -ge "$MAX_LOG_SIZE" ]; then
+            mv "$LOG_FILE" "${LOG_FILE}.1"
+        fi
+    fi
+    echo "$(date +'%Y-%m-%d %H:%M:%S.%3N %z') - $message" | tee -a "$LOG_FILE"
+}
+
 type=$1
 namespace=$2
 pod=$3
-echo "$date $0 running with type=$type, namespace=$namespace, pod=$pod" | tee -a ${log}
+log "$0 running with type=$type, namespace=$namespace, pod=$pod"
 
 # determine password to offline said indexer
 if [ $type == "indexer" ]; then
@@ -25,19 +38,19 @@ if [ $type == "indexer" ]; then
   #  fi
   #done < ${tmpfile}
   #rm ${tmpfile}
-  echo "$date kubectl exec -n $namespace $pod -- cat /mnt/splunk-secrets/password" | tee -a ${log}
+  log "kubectl exec -n $namespace $pod -- cat /mnt/splunk-secrets/password"
   password=`kubectl exec -n $namespace $pod -- cat /mnt/splunk-secrets/password`
-  echo "$date kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:password" | tee -a ${log}
-  kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:$password 2>&1 | tee -a ${log}
+  log "kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:password"
+  kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk offline -auth admin:$password 2>&1 | tee -a ${LOG_FILE}
 elif [ $type == "searchhead" ]; then
-  echo "$date kubectl cp -n $namespace /root/scripts/splunk_enable_detention.sh $pod:/opt/splunk/var/splunk_enable_detention.sh" | tee -a ${log}
-  kubectl cp -n $namespace /root/scripts/splunk_enable_detention.sh $pod:/opt/splunk/var/splunk_enable_detention.sh
-  echo "$date kubectl exec -n $namespace $pod -- sh /opt/splunk/var/splunk_enable_detention.sh" | tee -a ${log}
-  kubectl exec -n $namespace $pod -- sh /opt/splunk/var/splunk_enable_detention.sh 2>&1 | tee -a ${log}
+  log "$date kubectl cp -n $namespace /root/scripts/splunk_enable_detention.sh $pod:/opt/splunk/var/splunk_enable_detention.sh"
+  kubectl cp -n $namespace /root/scripts/splunk_enable_detention.sh $pod:/opt/splunk/var/splunk_enable_detention.sh 2>&1 | tee -a ${LOG_FIE}
+  log "kubectl exec -n $namespace $pod -- sh /opt/splunk/var/splunk_enable_detention.sh"
+  kubectl exec -n $namespace $pod -- sh /opt/splunk/var/splunk_enable_detention.sh 2>&1 | tee -a ${LOG_FILE}
 else
-  echo "$date pod=$pod namespace=$namespace, non-indexers/search heads will be stopped without offline/detention" | tee -a ${log}
+  log "pod=$pod namespace=$namespace, non-indexers/search heads will be stopped without offline/detention"
 fi
-echo "$date kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop" | tee -a ${log}
-kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop 2>&1 | tee -a ${log}
-echo "$date kubectl delete pod -n $namespace $pod"
-kubectl delete pod -n $namespace $pod 2>&1 | tee -a ${log}
+log "kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop"
+kubectl exec -n $namespace $pod -- /opt/splunk/bin/splunk stop 2>&1 | tee -a ${LOG_FILE}
+log "kubectl delete pod -n $namespace $pod"
+kubectl delete pod -n $namespace $pod 2>&1 | tee -a ${LOG_FILE}
