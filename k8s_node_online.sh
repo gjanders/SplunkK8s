@@ -8,6 +8,7 @@ namespace_pod_array=()
 pids=()
 start_time=$(date +%s)
 max_duration=$((16 * 60 * 60))  # 16 hours in seconds
+max_log_size=$((2 * 1024 * 1024))  # 2MB in bytes
 
 # Logging function
 log() {
@@ -15,7 +16,7 @@ log() {
     if [ -f "$LOG_FILE" ]; then
         local log_size
         log_size=$(stat -c%s "$LOG_FILE")
-        if [ "$log_size" -ge "$MAX_LOG_SIZE" ]; then
+        if [ "$log_size" -ge "$max_log_size" ]; then
             mv "$LOG_FILE" "${LOG_FILE}.1"
         fi
     fi
