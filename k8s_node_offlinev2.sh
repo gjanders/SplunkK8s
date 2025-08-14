@@ -2,6 +2,7 @@
 export KUBECONFIG=/etc/kubernetes/admin.conf
 
 LOG_FILE=/opt/splunkforwarder/var/log/splunk/k8s_node_offline.sh
+max_log_size=$((2 * 1024 * 1024))  # 2MB in bytes
 
 # Logging function
 log() {
@@ -9,7 +10,7 @@ log() {
     if [ -f "$LOG_FILE" ]; then
         local log_size
         log_size=$(stat -c%s "$LOG_FILE")
-        if [ "$log_size" -ge "$MAX_LOG_SIZE" ]; then
+        if [ "$log_size" -ge "$max_log_size" ]; then
             mv "$LOG_FILE" "${LOG_FILE}.1"
         fi
     fi
@@ -60,3 +61,4 @@ done
 
 log "kubectl drain `hostname` --ignore-daemonsets"
 kubectl drain `hostname` --ignore-daemonsets 2>&1 | tee -a ${LOG_FILE}
+
